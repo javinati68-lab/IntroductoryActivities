@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Rocha’s English Class: Introductory Activities</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brandBlue: '#00bfff',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- SortableJS for drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .shiny-blue-border {
+            border: 2px solid #00bfff;
+            box-shadow: 0 0 12px 2px rgba(0, 191, 255, 0.4), inset 0 0 6px rgba(0, 191, 255, 0.2);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .shiny-blue-border:focus {
+            outline: none;
+            box-shadow: 0 0 16px 4px rgba(0, 191, 255, 0.6), inset 0 0 8px rgba(0, 191, 255, 0.3);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            /* Adjusted to 130% to perfectly match standard document page proportions, making it much larger vertically */
+            padding-bottom: 130%; 
+            overflow: hidden;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+        }
+        .dark .canvas-container { background-color: #374151; }
+
+        .canvas-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Crucial for drawing on mobile */
+            z-index: 10;
+        }
+
+        .image-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensures the whole image fits without cropping */
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .word-tile {
+            cursor: grab;
+            user-select: none;
+        }
+        .word-tile:active {
+            cursor: grabbing;
+        }
+
+        .correct-answer { border-color: #22c55e !important; background-color: #dcfce7 !important; color: #166534; }
+        .dark .correct-answer { background-color: #14532d !important; color: #bbf7d0 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fee2e2 !important; color: #991b1b; }
+        .dark .incorrect-answer { background-color: #7f1d1d !important; color: #fecaca !important; }
+
+        .hidden-section { display: none !important; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; color: black; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-page-break { page-break-before: always; }
+            
+            #results-section { 
+                display: block !important;
+                position: absolute;
+                top: 0; left: 0; width: 100%;
+            }
+            
+            .chart-container {
+                max-width: 500px;
+                margin: 0 auto;
+                page-break-inside: avoid;
+            }
+            
+            * { box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 pb-24">
+
+    <!-- Top Navigation / Progress -->
+    <div class="fixed top-0 left-0 w-full bg-white dark:bg-slate-800 shadow-md z-50 no-print transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg md:text-xl font-bold truncate">Mr. Rocha’s English Class</h1>
+            <div class="flex items-center gap-4">
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700">
+            <div id="progressBar" class="h-full bg-brandBlue transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main id="mainContent" class="max-w-6xl mx-auto px-4 pt-24 pb-8 min-h-screen flex flex-col">
+        
+        <!-- Introduction Section (Index 0) -->
+        <section id="section-0" class="activity-section bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 mb-6 transition-colors duration-300">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-8 text-brandBlue">Introductory Activities</h2>
+            
+            <div class="max-w-2xl mx-auto flex flex-col gap-6">
+                <!-- imagea -->
+                <div class="w-full flex justify-center mb-6">
+                    <img src="imagea.jpg" alt="Intro Image" class="max-h-64 rounded-lg shadow-md object-contain" onerror="this.src='https://placehold.co/600x400/00bfff/ffffff?text=Image+A'">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="studentName" class="font-semibold text-lg">Student Name:</label>
+                    <input type="text" id="studentName" placeholder="Type your full name here" 
+                           class="w-full p-4 text-lg bg-transparent text-inherit shiny-blue-border placeholder-slate-400 dark:placeholder-slate-500">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="studentDate" class="font-semibold text-lg">Date:</label>
+                    <!-- HTML5 date input provides the requested drop down calendar -->
+                    <input type="date" id="studentDate" 
+                           class="w-full p-4 text-lg bg-transparent text-inherit shiny-blue-border cursor-pointer">
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity 1: Image Cycler (Index 1) -->
+        <section id="section-1" class="activity-section hidden-section bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 mb-6 transition-colors duration-300">
+            <h2 class="text-2xl font-bold border-b pb-2 mb-6">Activity 1: Image Viewer</h2>
+            <p class="mb-4 text-lg">Press the button to view the sequence of images.</p>
+            
+            <div class="flex flex-col items-center gap-6">
+                <div class="w-full max-w-2xl aspect-video bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-600">
+                    <img id="act1-image" src="" alt="Activity 1 Image" class="w-full h-full object-contain hidden">
+                    <span id="act1-placeholder" class="text-slate-400">Click the button to load images</span>
+                </div>
+                
+                <button id="act1-btn" class="px-8 py-4 bg-brandBlue hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg transform active:scale-95 transition text-xl">
+                    Show Next Image
+                </button>
+            </div>
+            
+            <div class="mt-8 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                <button class="check-answers-btn px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded shadow transition" data-section="1">
+                    Check / Complete Activity
+                </button>
+            </div>
+        </section>
+
+        <!-- Activity 2: Scrambled Sentences (Index 2) -->
+        <section id="section-2" class="activity-section hidden-section bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 mb-6 transition-colors duration-300">
+            <h2 class="text-2xl font-bold border-b pb-2 mb-6">Activity 2: Sentence Builder</h2>
+            <p class="mb-4 text-lg">Drag and drop the words to form complete, grammatically correct sentences. Listen to the audio for help.</p>
+            
+            <div id="act2-sentences-container" class="flex flex-col gap-8">
+                <!-- Sentences injected via JS -->
+            </div>
+            
+            <div class="mt-8 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                <button class="check-answers-btn px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded shadow transition" data-section="2">
+                    Check Answers
+                </button>
+            </div>
+        </section>
+
+        <!-- Activity 3: Video (Index 3) -->
+        <section id="section-3" class="activity-section hidden-section bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 mb-6 transition-colors duration-300">
+            <h2 class="text-2xl font-bold border-b pb-2 mb-6">Activity 3: Video Lesson</h2>
+            <p class="mb-4 text-lg">Watch the video carefully.</p>
+            
+            <div class="max-w-4xl mx-auto rounded-lg overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 bg-black">
+                <video controls class="w-full max-h-[600px] object-contain">
+                    <source src="Video1.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            
+            <div class="mt-8 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                <button class="check-answers-btn px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded shadow transition" data-section="3">
+                    Check / Complete Activity
+                </button>
+            </div>
+        </section>
+
+        <!-- Activities 4-12 injected dynamically to save redundant HTML -->
+        <div id="dynamic-canvas-sections" class="w-full flex flex-col items-center"></div>
+
+        <!-- Results Section (Index 13) -->
+        <section id="results-section" class="activity-section hidden-section bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-10 mb-6 transition-colors duration-300">
+            
+            <!-- Page 1 of Print -->
+            <div class="print-page-1">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl font-extrabold text-brandBlue mb-2">Final Results</h2>
+                    <p class="text-xl" id="results-name-date"></p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                    <div class="bg-slate-50 dark:bg-slate-700 p-6 rounded-xl shadow-inner flex flex-col justify-center items-center">
+                        <h3 class="text-2xl font-bold mb-4">Overall Score</h3>
+                        <div class="text-6xl font-extrabold text-green-500" id="overall-score-display">0%</div>
+                        <p class="mt-4 text-center text-lg italic" id="overall-feedback"></p>
+                    </div>
+                    
+                    <div class="chart-container relative h-64 w-full">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container relative h-80 w-full mb-10">
+                    <h3 class="text-xl font-bold text-center mb-4">Activity Completion Breakdown</h3>
+                    <canvas id="completionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Page Break for Print -->
+            <div class="print-page-break"></div>
+
+            <!-- Page 2 of Print: Recommendations -->
+            <div class="print-page-2 mt-12 pt-8 border-t-4 border-brandBlue">
+                <h3 class="text-3xl font-extrabold mb-6 text-center text-indigo-600 dark:text-indigo-400">8 Specific Recommendations</h3>
+                <p class="mb-6 text-center text-lg text-slate-600 dark:text-slate-300">Based on your performance and answers, here is a personalized study plan:</p>
+                
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 p-8 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                    <ul id="recommendations-list" class="space-y-4 text-lg list-none">
+                        <!-- Injected via JS -->
+                    </ul>
+                </div>
+
+                <div class="mt-12 flex justify-center no-print">
+                    <button onclick="window.print()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg flex items-center gap-2 transform hover:scale-105 transition text-xl">
+                        <i class="fas fa-print"></i> Print Results & Recommendations
+                    </button>
+                </div>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 no-print transition-colors duration-300 border-t border-slate-200 dark:border-slate-700">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <button id="prevBtn" class="px-6 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold rounded transition opacity-50 cursor-not-allowed">
+                <i class="fas fa-chevron-left mr-2"></i> Previous
+            </button>
+            
+            <button id="submitBtn" class="hidden px-8 py-3 bg-brandBlue hover:bg-blue-600 text-white font-bold rounded shadow-lg transform hover:scale-105 transition">
+                Submit All Activities
+            </button>
+
+            <button id="nextBtn" class="px-6 py-3 bg-brandBlue hover:bg-blue-600 text-white font-bold rounded transition">
+                Next <i class="fas fa-chevron-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const TOTAL_SECTIONS = 13; // 0: Intro, 1-12: Activities, 13: Results
+        let currentSectionIndex = 0;
+        let completedSections = new Array(13).fill(false);
+        let activityScores = new Array(13).fill(0); // Max score per activity
+
+        // --- Data for Activity 1 ---
+        const act1Images = [
+            'image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg', 'image5.jpg', 
+            'image6.jpg', 'image7.jpg', 'image8.jpg', 'image9.jpg', 'image10.jpg', 
+            'image11.jpg', 'image12.jpg', 'image13.jpg', 'image14.jpg', 'image15.jpg', 
+            'image16.jpg', 'imagea.jpg'
+        ];
+        let act1CurrentIdx = -1;
+
+        // --- Data for Activity 2 ---
+        const sentencesAct2 = [
+            { id: 1, original: "William was fascinated because the amazing book kept him reading all night.", subject: "William", adjED: "fascinated", adjING: "amazing" },
+            { id: 2, original: "He felt exhausted after the tiring marathon that he ran yesterday.", subject: "He", adjED: "exhausted", adjING: "tiring" },
+            { id: 3, original: "The confusing puzzle annoyed William, but he remained determined.", subject: "William", adjED: "annoyed", adjING: "confusing" },
+            { id: 4, original: "He thought the boring lecture was uninteresting and fell asleep.", subject: "He", adjED: "uninteresting", adjING: "boring" },
+            { id: 5, original: "William was surprised when he heard the shocking news on television.", subject: "William", adjED: "surprised", adjING: "shocking" },
+            { id: 6, original: "The frightening storm terrified him while he was staying home alone.", subject: "he", adjED: "terrified", adjING: "frightening" },
+            { id: 7, original: "He found the relaxing music soothing after a very frustrating day.", subject: "He", adjED: "soothing", adjING: "relaxing" },
+            { id: 8, original: "William was disappointed because the highly anticipated game was losing.", subject: "William", adjED: "disappointed", adjING: "losing" },
+            { id: 9, original: "The overwhelming crowd panicked him, but he found a calming spot.", subject: "he", adjED: "panicked", adjING: "overwhelming" },
+            { id: 10, original: "He remained excited about the upcoming trip despite the exhausting preparations.", subject: "He", adjED: "excited", adjING: "exhausting" }
+        ];
+
+        // --- Data for Canvas Activities (4 to 12) ---
+        const canvasActivities = [
+            { id: 4, page: 'Page1.jpg', audios: [] },
+            { id: 5, page: 'Page2.jpg', audios: ['Audio1.mp3', 'Audio2.mp3'] },
+            { id: 6, page: 'Page3.jpg', audios: ['Audio3.mp3', 'Audio4.mp3', 'Audio5.mp3'] },
+            { id: 7, page: 'Page4.jpg', audios: ['Audio6.mp3'] },
+            { id: 8, page: 'Page5.jpg', audios: ['Audio7.mp3'] },
+            { id: 9, page: 'Page6.jpg', audios: ['Audio8.mp3'] },
+            { id: 10, page: 'Page7.jpg', audios: [] },
+            { id: 11, page: 'Page8.jpg', audios: ['Audio9.mp3'] },
+            { id: 12, page: 'Page9.jpg', audios: ['Audio10.mp3', 'Audio11.mp3', 'Audio12.mp3', 'Audio13.mp3'] }
+        ];
+
+        let canvasInstances = {}; // Store contexts and states
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDarkMode();
+            buildCanvasActivities();
+            buildActivity2();
+            setupNavigation();
+            setupActivity1();
+            setupCheckButtons();
+            updateUI();
+        });
+
+        function initDarkMode() {
+            const toggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            toggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+            });
+        }
+
+        function setupNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            prevBtn.addEventListener('click', () => {
+                if (currentSectionIndex > 0) {
+                    currentSectionIndex--;
+                    updateUI();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSectionIndex < TOTAL_SECTIONS - 1) {
+                    currentSectionIndex++;
+                    updateUI();
+                }
+            });
+
+            submitBtn.addEventListener('click', () => {
+                currentSectionIndex = TOTAL_SECTIONS; // Go to results
+                generateResults();
+                updateUI();
+            });
+        }
+
+        function updateUI() {
+            // Hide all sections
+            document.querySelectorAll('.activity-section').forEach(sec => {
+                sec.classList.add('hidden-section');
+            });
+
+            // Show current section
+            const currentSec = document.getElementById(`section-${currentSectionIndex}`) || document.getElementById('results-section');
+            currentSec.classList.remove('hidden-section');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Update Progress Bar
+            const progress = (currentSectionIndex / TOTAL_SECTIONS) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Update Nav Buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (currentSectionIndex === 0) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (currentSectionIndex === TOTAL_SECTIONS) {
+                // Results page
+                nextBtn.classList.add('hidden');
+                prevBtn.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+            } else if (currentSectionIndex === TOTAL_SECTIONS - 1) {
+                // Last activity page
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                // Normal activity
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.remove('hidden'); // Allow submit anytime as requested
+            }
+        }
+
+        function setupActivity1() {
+            const btn = document.getElementById('act1-btn');
+            const img = document.getElementById('act1-image');
+            const placeholder = document.getElementById('act1-placeholder');
+
+            btn.addEventListener('click', () => {
+                act1CurrentIdx++;
+                if (act1CurrentIdx >= act1Images.length) {
+                    act1CurrentIdx = act1Images.length - 1; // Stop at last
+                }
+                
+                placeholder.classList.add('hidden');
+                img.classList.remove('hidden');
+                img.src = act1Images[act1CurrentIdx];
+                // Fallback via error handler
+                img.onerror = function() {
+                    this.src = `https://placehold.co/800x600/00bfff/ffffff?text=${act1Images[act1CurrentIdx]}`;
+                };
+
+                if (act1CurrentIdx === act1Images.length - 1) {
+                    btn.innerText = "End of Sequence";
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        let sortableInstances = [];
+        function buildActivity2() {
+            const container = document.getElementById('act2-sentences-container');
+            
+            sentencesAct2.forEach((sentenceData, index) => {
+                // Scramble words
+                const words = sentenceData.original.replace('.', '').split(' ');
+                const scrambled = [...words].sort(() => Math.random() - 0.5);
+
+                const block = document.createElement('div');
+                block.className = "p-4 bg-slate-50 dark:bg-slate-700 rounded-lg shadow border border-slate-200 dark:border-slate-600";
+                
+                const header = document.createElement('div');
+                header.className = "flex justify-between items-center mb-4";
+                header.innerHTML = `
+                    <h3 class="font-bold text-lg">Sentence ${index + 1}</h3>
+                    <button onclick="playAudio('${sentenceData.original.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900 dark:hover:bg-blue-800 dark:text-blue-200 rounded transition flex items-center gap-2">
+                        <i class="fas fa-volume-up"></i> Listen
+                    </button>
+                `;
+                block.appendChild(header);
+
+                const sortArea = document.createElement('div');
+                sortArea.id = `sortable-${index}`;
+                sortArea.className = "flex flex-wrap gap-2 min-h-[50px] p-2 shiny-blue-border bg-white dark:bg-slate-800";
+                sortArea.dataset.original = sentenceData.original.replace('.', '');
+                
+                scrambled.forEach(word => {
+                    const span = document.createElement('span');
+                    span.className = "word-tile px-4 py-2 bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 rounded shadow-sm text-lg font-medium";
+                    span.textContent = word;
+                    sortArea.appendChild(span);
+                });
+
+                block.appendChild(sortArea);
+                
+                // Feedback span
+                const feedback = document.createElement('div');
+                feedback.id = `feedback-${index}`;
+                feedback.className = "mt-3 font-bold text-lg hidden";
+                block.appendChild(feedback);
+
+                container.appendChild(block);
+
+                // Init Sortable
+                const sortable = new Sortable(sortArea, {
+                    animation: 150,
+                    ghostClass: 'bg-blue-100'
+                });
+                sortableInstances.push({ inst: sortable, id: index });
+            });
+        }
+
+        function playAudio(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert("Text-to-speech not supported in your browser.");
+            }
+        }
+
+        function buildCanvasActivities() {
+            const container = document.getElementById('dynamic-canvas-sections');
+
+            canvasActivities.forEach((act) => {
+                const section = document.createElement('section');
+                section.id = `section-${act.id}`;
+                /* Increased max-w to 1080px (approx 20% larger than previous max-w-4xl) */
+                section.className = "activity-section hidden-section w-full max-w-[1080px] bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 mb-6 transition-colors duration-300";
+
+                let audioHtml = '';
+                if (act.audios.length > 0) {
+                    audioHtml = '<div class="mt-6 space-y-4">';
+                    act.audios.forEach((audio, idx) => {
+                        audioHtml += `
+                            <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-700 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <span class="font-semibold text-slate-600 dark:text-slate-300">Audio ${idx + 1}:</span>
+                                <audio controls class="flex-grow h-10">
+                                    <source src="${audio}" type="audio/mpeg">
+                                    Your browser does not support audio.
+                                </audio>
+                            </div>
+                        `;
+                    });
+                    audioHtml += '</div>';
+                }
+
+                section.innerHTML = `
+                    <h2 class="text-2xl font-bold border-b pb-2 mb-6">Activity ${act.id}: Annotation Task</h2>
+                    <p class="mb-4 text-lg">Use the drawing tools to write on the page.</p>
+                    
+                    <!-- Tools -->
+                    <div class="flex flex-wrap gap-4 mb-4 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg shadow-inner justify-center md:justify-start">
+                        <div class="flex gap-2 border-r border-slate-300 dark:border-slate-500 pr-4">
+                            <button onclick="setBrushColor(${act.id}, '#000000')" class="w-8 h-8 rounded-full bg-black ring-2 ring-transparent focus:ring-blue-500 outline-none" title="Black"></button>
+                            <button onclick="setBrushColor(${act.id}, '#ef4444')" class="w-8 h-8 rounded-full bg-red-500 ring-2 ring-transparent focus:ring-blue-500 outline-none" title="Red"></button>
+                            <button onclick="setBrushColor(${act.id}, '#3b82f6')" class="w-8 h-8 rounded-full bg-blue-500 ring-2 ring-transparent focus:ring-blue-500 outline-none" title="Blue"></button>
+                            <button onclick="setBrushColor(${act.id}, '#22c55e')" class="w-8 h-8 rounded-full bg-green-500 ring-2 ring-transparent focus:ring-blue-500 outline-none" title="Green"></button>
+                        </div>
+                        
+                        <div class="flex gap-2 border-r border-slate-300 dark:border-slate-500 pr-4 items-center">
+                            <button onclick="setBrushWidth(${act.id}, 2)" class="px-3 py-1 bg-white dark:bg-slate-600 border rounded hover:bg-slate-50 text-sm">Thin</button>
+                            <button onclick="setBrushWidth(${act.id}, 5)" class="px-3 py-1 bg-white dark:bg-slate-600 border rounded hover:bg-slate-50 text-base font-bold">Med</button>
+                            <button onclick="setBrushWidth(${act.id}, 10)" class="px-3 py-1 bg-white dark:bg-slate-600 border rounded hover:bg-slate-50 text-lg font-extrabold">Thick</button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="setEraser(${act.id})" class="px-4 py-1 bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 rounded font-bold flex items-center gap-2">
+                                <i class="fas fa-eraser"></i> Eraser
+                            </button>
+                            <button onclick="clearCanvas(${act.id})" class="px-4 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 border rounded flex items-center gap-2">
+                                <i class="fas fa-trash"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Area -->
+                    <div class="canvas-container shiny-blue-border bg-white dark:bg-slate-900">
+                        <img src="${act.page}" class="image-layer" onerror="this.src='https://placehold.co/800x1066/ffffff/aaaaaa?text=${act.page}'">
+                        <canvas id="canvas-${act.id}" class="canvas-layer"></canvas>
+                    </div>
+
+                    ${audioHtml}
+
+                    <div class="mt-8 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                        <button class="check-answers-btn px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded shadow transition" data-section="${act.id}">
+                            Check / Complete Activity
+                        </button>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+
+            // Initialize canvas contexts after attaching to DOM
+            setTimeout(() => {
+                canvasActivities.forEach(act => initCanvas(act.id));
+            }, 100);
+        }
+
+        function initCanvas(id) {
+            const canvas = document.getElementById(`canvas-${id}`);
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            
+            // Use ResizeObserver for accurate sizing
+            const resizeCanvas = () => {
+                const rect = container.getBoundingClientRect();
+                
+                // Only resize if dimensions actually changed and are valid
+                if (rect.width > 0 && rect.height > 0 && (canvas.width !== rect.width || canvas.height !== rect.height)) {
+                    // Create a temporary canvas to save current drawing
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    if(canvas.width > 0 && canvas.height > 0) {
+                        tempCtx.drawImage(canvas, 0, 0);
+                    }
+
+                    // Set actual internal dimensions to match display dimensions
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+
+                    // Restore drawing, scaling it to new dimensions
+                    if(tempCanvas.width > 0 && tempCanvas.height > 0) {
+                         ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+                    }
+                    
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                }
+            };
+            
+            const observer = new ResizeObserver(resizeCanvas);
+            observer.observe(container);
+
+            // Initial manual call
+            resizeCanvas();
+
+            canvasInstances[id] = {
+                canvas: canvas,
+                ctx: ctx,
+                isDrawing: false,
+                color: '#000000',
+                width: 2,
+                mode: 'draw' // 'draw' or 'erase'
+            };
+
+            // Event Listeners
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                // Ensure touch coordinates are correctly mapped relative to the bounding rect
+                const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+                
+                // Scale coordinates based on internal resolution vs display size
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            };
+
+            const startDraw = (e) => {
+                if(completedSections[id]) return; // locked
+                e.preventDefault();
+                const inst = canvasInstances[id];
+                inst.isDrawing = true;
+                const pos = getPos(e);
+                inst.ctx.beginPath();
+                inst.ctx.moveTo(pos.x, pos.y);
+            };
+
+            const draw = (e) => {
+                const inst = canvasInstances[id];
+                if (!inst.isDrawing || completedSections[id]) return;
+                e.preventDefault();
+                
+                const pos = getPos(e);
+                inst.ctx.lineTo(pos.x, pos.y);
+                
+                if (inst.mode === 'erase') {
+                    inst.ctx.globalCompositeOperation = 'destination-out';
+                    inst.ctx.lineWidth = inst.width * 3; // Eraser is wider
+                } else {
+                    inst.ctx.globalCompositeOperation = 'source-over';
+                    inst.ctx.strokeStyle = inst.color;
+                    inst.ctx.lineWidth = inst.width;
+                }
+                
+                inst.ctx.stroke();
+            };
+
+            const endDraw = () => {
+                const inst = canvasInstances[id];
+                inst.isDrawing = false;
+                inst.ctx.beginPath(); // reset path
+            };
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseout', endDraw);
+
+            canvas.addEventListener('touchstart', startDraw, {passive: false});
+            canvas.addEventListener('touchmove', draw, {passive: false});
+            canvas.addEventListener('touchend', endDraw);
+        }
+
+        // Global functions for toolbar
+        window.setBrushColor = (id, color) => {
+            if(canvasInstances[id]) {
+                canvasInstances[id].color = color;
+                canvasInstances[id].mode = 'draw';
+            }
+        };
+        window.setBrushWidth = (id, w) => {
+            if(canvasInstances[id]) canvasInstances[id].width = w;
+        };
+        window.setEraser = (id) => {
+            if(canvasInstances[id]) canvasInstances[id].mode = 'erase';
+        };
+        window.clearCanvas = (id) => {
+            if(!completedSections[id] && canvasInstances[id]) {
+                const c = canvasInstances[id].canvas;
+                canvasInstances[id].ctx.clearRect(0, 0, c.width, c.height);
+            }
+        };
+
+        function setupCheckButtons() {
+            document.querySelectorAll('.check-answers-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const sectionId = parseInt(e.target.dataset.section);
+                    checkSection(sectionId, e.target);
+                });
+            });
+        }
+
+        function checkSection(id, btn) {
+            completedSections[id] = true;
+            btn.disabled = true;
+            btn.classList.replace('bg-green-500', 'bg-gray-400');
+            btn.classList.replace('hover:bg-green-600', 'hover:bg-gray-400');
+            btn.innerText = "Completed / Locked";
+            
+            // Specific checking logic
+            if (id === 2) {
+                // Check Activity 2 sentences
+                let correctCount = 0;
+                sortableInstances.forEach(si => {
+                    si.inst.options.disabled = true; // Lock drag
+                    const container = si.inst.el;
+                    container.classList.remove('shiny-blue-border');
+                    
+                    const currentOrder = Array.from(container.children).map(span => span.textContent).join(' ');
+                    const original = container.dataset.original;
+                    const feedback = document.getElementById(`feedback-${si.id}`);
+                    feedback.classList.remove('hidden');
+
+                    if (currentOrder === original) {
+                        correctCount++;
+                        container.classList.add('correct-answer');
+                        feedback.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Correct!`;
+                        feedback.classList.add('text-green-600', 'dark:text-green-400');
+                    } else {
+                        container.classList.add('incorrect-answer');
+                        feedback.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. <br><span class="text-sm font-normal text-slate-700 dark:text-slate-300">Correct sentence: ${original}</span>`;
+                        feedback.classList.add('text-red-600', 'dark:text-red-400');
+                    }
+                });
+                activityScores[2] = (correctCount / 10) * 100; // Store percentage
+            } else {
+                // Other activities just mark 100% on completion click
+                activityScores[id] = 100;
+            }
+        }
+
+        let chartInstances = [];
+
+        function generateResults() {
+            const nameInput = document.getElementById('studentName').value || 'Anonymous Student';
+            const dateInput = document.getElementById('studentDate').value || new Date().toLocaleDateString();
+            
+            document.getElementById('results-name-date').innerHTML = `<span class="font-bold">${nameInput}</span> | <span class="font-bold">${dateInput}</span>`;
+
+            // Calculate overall
+            let totalPossible = 0;
+            let totalEarned = 0;
+            let completionCount = 0;
+
+            for (let i = 1; i <= 12; i++) {
+                totalPossible += 100;
+                totalEarned += activityScores[i];
+                if (completedSections[i]) completionCount++;
+            }
+
+            const finalPercentage = Math.round((totalEarned / totalPossible) * 100) || 0;
+            const scoreDisplay = document.getElementById('overall-score-display');
+            scoreDisplay.innerText = `${finalPercentage}%`;
+            
+            const feedbackText = document.getElementById('overall-feedback');
+            if (finalPercentage >= 90) { scoreDisplay.className = "text-6xl font-extrabold text-green-500"; feedbackText.innerText = "Excellent work! You have a solid grasp of the concepts."; }
+            else if (finalPercentage >= 70) { scoreDisplay.className = "text-6xl font-extrabold text-yellow-500"; feedbackText.innerText = "Good job! A little more practice will make you perfect."; }
+            else { scoreDisplay.className = "text-6xl font-extrabold text-red-500"; feedbackText.innerText = "Keep practicing! Review the recommendations below to improve."; }
+
+            generateCharts(finalPercentage, completionCount);
+            generateRecommendations(finalPercentage, activityScores[2], completionCount);
+        }
+
+        function generateCharts(finalScore, completionCount) {
+            // Destroy old charts if exist
+            chartInstances.forEach(c => c.destroy());
+            chartInstances = [];
+
+            Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#475569';
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            // 1. Overall Score Bar Chart
+            const ctxScore = document.getElementById('scoreChart').getContext('2d');
+            const scoreChart = new Chart(ctxScore, {
+                type: 'bar',
+                data: {
+                    labels: ['Activity 2 (Grammar)', 'Other Activities Avg', 'Overall Score'],
+                    datasets: [{
+                        label: 'Performance (%)',
+                        data: [
+                            activityScores[2] || 0, 
+                            // Avg of others
+                            (Object.values(activityScores).reduce((a,b)=>a+b,0) - activityScores[2]) / 11 || 0, 
+                            finalScore
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(75, 192, 192)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+
+            // 2. Completion Pie Chart
+            const ctxComp = document.getElementById('completionChart').getContext('2d');
+            const compChart = new Chart(ctxComp, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{
+                        data: [completionCount, 12 - completionCount],
+                        backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(203, 213, 225, 0.5)'],
+                        borderColor: ['#16a34a', '#94a3b8'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            chartInstances.push(scoreChart, compChart);
+        }
+
+        function generateRecommendations(finalScore, act2Score, completionCount) {
+            const list = document.getElementById('recommendations-list');
+            list.innerHTML = '';
+            
+            let recs = [];
+
+            // Rule-based logic for recommendations
+            if (act2Score < 50) {
+                recs.push("1. <strong>Grammar Focus:</strong> Review the core rules for constructing complex sentences, specifically placing the independent clause properly.");
+                recs.push("2. <strong>Adjectives:</strong> Practice the difference between '-ed' adjectives (how someone feels) and '-ing' adjectives (the cause of the feeling).");
+            } else if (act2Score < 80) {
+                recs.push("1. <strong>Grammar Tuning:</strong> You have a good understanding, but carefully read sentences aloud to catch minor word-order mistakes.");
+                recs.push("2. <strong>Pronoun Consistency:</strong> Ensure that the pronoun 'he' is closely linked to the subject 'William' in your writing.");
+            } else {
+                recs.push("1. <strong>Advanced Grammar:</strong> Excellent sentence building! Challenge yourself by writing your own paragraphs using these complex structures.");
+                recs.push("2. <strong>Vocabulary Expansion:</strong> Try finding synonyms for the '-ed' and '-ing' adjectives used in Activity 2 to enrich your vocabulary.");
+            }
+
+            if (completionCount < 12) {
+                recs.push("3. <strong>Completion:</strong> Make sure to visit and complete all activities. Unfinished sections impact your overall review.");
+                recs.push("4. <strong>Time Management:</strong> Allocate specific time to interact with the audio and video materials without rushing.");
+            } else {
+                recs.push("3. <strong>Dedication:</strong> Great job completing all tasks! Consistency is key to mastering English.");
+                recs.push("4. <strong>Active Listening:</strong> Continue taking notes while listening to audio to reinforce memory retention.");
+            }
+
+            recs.push("5. <strong>Visual Association:</strong> Use the drawing activities (Activities 4-12) to create strong visual connections with the English vocabulary presented.");
+            recs.push("6. <strong>Listening Practice:</strong> Re-listen to the sentences in Activity 2 and the audios in Activities 5-12 to improve pronunciation and intonation.");
+            recs.push("7. <strong>Context Clues:</strong> Re-watch the video in Activity 3 and try summarizing its main points in exactly 3 complex sentences.");
+            recs.push("8. <strong>Self-Review:</strong> Print this results page and bring it to our next class for a targeted discussion on your progress.");
+
+            recs.forEach(r => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-star text-yellow-500 mr-2"></i> ${r}`;
+                list.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
